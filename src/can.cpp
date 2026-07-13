@@ -65,6 +65,64 @@ void canInit()
     }
 }
 
+///////////////////////////////////////////
+// Send Message
+//
+// Sends a CAN message using transmit
+// buffer 0.
+//
+// Returns:
+//     true  Message queued
+//     false Buffer busy
+///////////////////////////////////////////
+bool canSendMessage(const CanMessage *message)
+{
+    if (canTxBusy())
+    {
+        return false;
+    }
+
+    uint8_t buffer[13];
+
+    canBuildTxBuffer(message, buffer);
+
+    canLoadTxBuffer0(buffer,
+                     5 + message->length);
+
+    canRequestToSend0();
+
+    return canWaitForTransmit();
+}
+
+bool canReceiveMessage(CanMessage *message)
+{
+    if(!canMessageAvailable())
+    {
+        return false;
+    }
+
+    canReadRxBuffer0(message);
+
+    return true;
+}
+
+///////////////////////////////////////////
+// Message Available
+//
+// Returns true if RX Buffer 0 contains
+// a received CAN message.
+///////////////////////////////////////////
+bool canMessageAvailable()
+{
+    return (canReadRegister(CANINTF) & RX0IF);
+}
+
+
+
+
+///////////////////////////////////////////
+// Private Functions
+///////////////////////////////////////////
 
 ///////////////////////////////////////////
 // Request To Send
@@ -79,20 +137,6 @@ void canRequestToSend0()
 
     canDeselect();
 }
-
-
-
-///////////////////////////////////////////
-// Message Available
-//
-// Returns true if RX Buffer 0 contains
-// a received CAN message.
-///////////////////////////////////////////
-bool canMessageAvailable()
-{
-    return (canReadRegister(CANINTF) & RX0IF);
-}
-
 
 ///////////////////////////////////////////
 // Build Transmit Buffer
@@ -150,44 +194,3 @@ static void canLoadTxBuffer0(
     canDeselect();
 }
 
-
-///////////////////////////////////////////
-// Send Message
-//
-// Sends a CAN message using transmit
-// buffer 0.
-//
-// Returns:
-//     true  Message queued
-//     false Buffer busy
-///////////////////////////////////////////
-bool canSendMessage(const CanMessage *message)
-{
-    if (canTxBusy())
-    {
-        return false;
-    }
-
-    uint8_t buffer[13];
-
-    canBuildTxBuffer(message, buffer);
-
-    canLoadTxBuffer0(buffer,
-                     5 + message->length);
-
-    canRequestToSend0();
-
-    return canWaitForTransmit();
-}
-
-bool canReceiveMessage(CanMessage *message)
-{
-    if(!canMessageAvailable())
-    {
-        return false;
-    }
-
-    canReadRxBuffer0(message);
-
-    return true;
-}

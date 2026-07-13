@@ -286,7 +286,6 @@ void canConfigureFilters()
     canWriteRegister(RXB0CTRL, 0x60);
 }
 
-
 ///////////////////////////////////////////
 // Transmit Buffer Busy
 //
@@ -313,18 +312,44 @@ bool canTxBusy()
 ///////////////////////////////////////////
 void canReadRxBuffer0(CanMessage *message)
 {
-    uint8_t sidh = canReadRegister(RXB0SIDH);
-    uint8_t sidl = canReadRegister(RXB0SIDL);
-
+    uint8_t sidh = canReadRegister(RXB0SIDH);       // Read the two registers that contain
+    uint8_t sidl = canReadRegister(RXB0SIDL);       // the 11-bit Standard Identifier (SID).
+    
+    // The MCP2515 stores the identifier as:
+    //
+    // SIDH = ID bits 10:3
+    // SIDL = ID bits 2:0 in bits 7:5
+    //
+    // Example:
+    //
+    // SIDH = abcdefgh
+    // SIDL = xyz-----
+    //
+    // Shift SIDH left by 3 to move it back
+    // into bits 10:3.
+    //
+    // Shift SIDL right by 5 to move bits
+    // 7:5 down into bits 2:0.
+    //
+    // OR the two values together to rebuild
+    // the original 11-bit CAN identifier.
+    ///////////////////////////////////////////
+    // 10 9 8 7 6 5 4 3 | 2 1 0
+    // ------------------------+------
+    // Stored by MCP2515 as:
+    // SIDH
+    // 10 9 8 7 6 5 4 3
+    // SIDL
+    // 2 1 0 - - - - -
     message->id = (sidh << 3) | (sidl >> 5);
 
-    message->length =
-        canReadRegister(RXB0DLC) & 0x0F;
+    message->length =                               // Lower four bits contain the number
+        canReadRegister(RXB0DLC) & 0x0F;            // of data bytes in the message.
 
     for (uint8_t i = 0; i < message->length; i++)
     {
-        message->data[i] =
-            canReadRegister(RXB0D0 + i);
+        message->data[i] =                          // Read each data byte from the receive buffer
+            canReadRegister(RXB0D0 + i);            
     }
 
     // Clear receive interrupt flag
@@ -333,8 +358,21 @@ void canReadRxBuffer0(CanMessage *message)
                  0x00);
 }
 
-////////////////////////////
+///////////////////////////////////////////
+// Wait For Transmission
 //
+// Waits until the MCP2515 finishes
+// transmitting the current CAN message.
+//
+// The TXREQ bit remains set while the
+// controller owns the transmit buffer.
+// Once transmission completes, TXREQ is
+// automatically cleared by the MCP2515.
+//
+// Returns:
+//   true  - Transmission completed
+//   false - Timed out waiting
+///////////////////////////////////////////
 bool canWaitForTransmit()
 {
     uint32_t start = millis();

@@ -5,7 +5,6 @@
 
 #include "can.h"
 
-
 void canSelect();
 void canDeselect();
 
