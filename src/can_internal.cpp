@@ -60,7 +60,7 @@ void canReset()
 {
     canSelect();
 
-    canTransfer(MCP_RESET);
+    canTransfer(CAN_MCP_RESET);
 
     canDeselect();
 
@@ -97,7 +97,7 @@ uint8_t canReadRegister(uint8_t address)
 
     canSelect();
 
-    canTransfer(MCP_READ);              // Send read command
+    canTransfer(CAN_MCP_READ);              // Send read command
     canTransfer(address);               // Send register address
 
     // Send a dummy byte to generate the
@@ -124,7 +124,7 @@ void canWriteRegister(uint8_t address, uint8_t value)
 {
     canSelect();
 
-    canTransfer(MCP_WRITE);             // Send WRITE command
+    canTransfer(CAN_MCP_WRITE);             // Send WRITE command
     canTransfer(address);               // Send register address
     canTransfer(value);                 // Send register data
 
@@ -147,7 +147,7 @@ void canWriteRegisters(uint8_t address,
 {
     canSelect();
 
-    canTransfer(MCP_WRITE);
+    canTransfer(CAN_MCP_WRITE);
 
     canTransfer(address);
 
@@ -175,7 +175,7 @@ void canReadRegisters(uint8_t address,
 {
     canSelect();
 
-    canTransfer(MCP_READ);
+    canTransfer(CAN_MCP_READ);
 
     canTransfer(address);
 
@@ -203,7 +203,7 @@ void canBitModify(uint8_t address,
 {
     canSelect();
 
-    canTransfer(MCP_BIT_MODIFY);
+    canTransfer(CAN_MCP_BIT_MODIFY);
     canTransfer(address);
     canTransfer(mask);
     canTransfer(data);
@@ -223,7 +223,7 @@ uint8_t canReadStatus()
 
     canSelect();
     
-    canTransfer(MCP_READ_STATUS);
+    canTransfer(CAN_MCP_READ_STATUS);
 
     status = canTransfer(0x00);
 

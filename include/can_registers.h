@@ -24,16 +24,18 @@ constexpr uint8_t CNF1     = 0x2A;
 // };
 
 // Interrupts
+constexpr uint8_t TEC      = 0x1C;
+constexpr uint8_t REC      = 0x1D;
 constexpr uint8_t CANINTE  = 0x2B;
 constexpr uint8_t CANINTF  = 0x2C;
 constexpr uint8_t EFLG     = 0x2D;
 
 // Operating Modes
-constexpr uint8_t MODE_NORMAL        = 0x00;
-constexpr uint8_t MODE_SLEEP         = 0x20;
-constexpr uint8_t MODE_LOOPBACK      = 0x40;
-constexpr uint8_t MODE_LISTEN_ONLY   = 0x60;
-constexpr uint8_t MODE_CONFIGURATION = 0x80;
+constexpr uint8_t CAN_MODE_NORMAL        = 0x00;
+constexpr uint8_t CAN_MODE_SLEEP         = 0x20;
+constexpr uint8_t CAN_MODE_LOOPBACK      = 0x40;
+constexpr uint8_t CAN_MODE_LISTEN_ONLY   = 0x60;
+constexpr uint8_t CAN_MODE_CONFIGURATION = 0x80;
 
 constexpr uint8_t CANCTRL_REQOP = 0xE0;
 

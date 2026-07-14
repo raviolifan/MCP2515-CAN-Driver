@@ -17,6 +17,85 @@
 #include "spimodule.h"
 
 ///////////////////////////////////////////
+// Private Functions
+///////////////////////////////////////////
+
+///////////////////////////////////////////
+// Request To Send
+//
+// Starts transmission of TX Buffer 0.
+///////////////////////////////////////////
+void canRequestToSend0()
+{
+    canSelect();
+
+    canTransfer(CAN_MCP_RTS_TX0);
+
+    canDeselect();
+}
+
+///////////////////////////////////////////
+// Build Transmit Buffer
+//
+// Converts a CAN message into the MCP2515
+// transmit buffer format.
+//
+// Parameters:
+//   message - CAN message to transmit
+//   buffer  - Destination transmit buffer
+///////////////////////////////////////////
+static void canBuildTxBuffer(
+    const CanMessage *message,
+    uint8_t *buffer)
+{
+    buffer[0] = message->id >> 3;
+
+    buffer[1] = (message->id & 0x07) << 5;
+
+    buffer[2] = 0;
+
+    buffer[3] = 0;
+
+    buffer[4] = message->length & 0x0F;
+
+    memcpy(&buffer[5],
+           message->data,
+           message->length);
+}
+
+///////////////////////////////////////////
+// Load Transmit Buffer 0
+//
+// Copies a formatted transmit buffer into
+// MCP2515 transmit buffer 0 using the
+// Load TX Buffer SPI command.
+//
+// Parameters:
+//   buffer - Transmit buffer data
+//   length - Number of bytes to transfer
+///////////////////////////////////////////
+static void canLoadTxBuffer0(
+    const uint8_t *buffer,
+    uint8_t length)
+{
+    canSelect();
+
+    canTransfer(CAN_MCP_LOAD_TX);
+
+    for(uint8_t i = 0; i < length; i++)
+    {
+        canTransfer(buffer[i]);
+    }
+
+    canDeselect();
+}
+
+
+///////////////////////////////////////////
+// Public Functions
+///////////////////////////////////////////
+
+///////////////////////////////////////////
 // Initialize CAN Driver
 //
 // Initializes the SPI bus, configures the
@@ -38,32 +117,10 @@ void canInit()
 
     canConfigureFilters();
 
-    canSetMode(MODE_LOOPBACK);
+    canSetMode(CAN_MODE_NORMAL);
 
-    CanMessage tx;
-
-    tx.id = 0x123;
-
-    tx.length = 8;
-
-    for(int i=0;i<8;i++)
-    {
-        tx.data[i]=i;
-    }
-
-    canSendMessage(&tx);
-
-    CanMessage rx;
-
-    if(canReceiveMessage(&rx))
-    {
-        Serial.println("PASS");
-    }
-    else
-    {
-        Serial.println("FAIL");
-    }
 }
+
 
 ///////////////////////////////////////////
 // Send Message
@@ -118,79 +175,4 @@ bool canMessageAvailable()
 }
 
 
-
-
-///////////////////////////////////////////
-// Private Functions
-///////////////////////////////////////////
-
-///////////////////////////////////////////
-// Request To Send
-//
-// Starts transmission of TX Buffer 0.
-///////////////////////////////////////////
-void canRequestToSend0()
-{
-    canSelect();
-
-    canTransfer(MCP_RTS_TX0);
-
-    canDeselect();
-}
-
-///////////////////////////////////////////
-// Build Transmit Buffer
-//
-// Converts a CAN message into the MCP2515
-// transmit buffer format.
-//
-// Parameters:
-//   message - CAN message to transmit
-//   buffer  - Destination transmit buffer
-///////////////////////////////////////////
-static void canBuildTxBuffer(
-    const CanMessage *message,
-    uint8_t *buffer)
-{
-    buffer[0] = message->id >> 3;
-
-    buffer[1] = (message->id & 0x07) << 5;
-
-    buffer[2] = 0;
-
-    buffer[3] = 0;
-
-    buffer[4] = message->length & 0x0F;
-
-    memcpy(&buffer[5],
-           message->data,
-           message->length);
-}
-
-///////////////////////////////////////////
-// Load Transmit Buffer 0
-//
-// Copies a formatted transmit buffer into
-// MCP2515 transmit buffer 0 using the
-// Load TX Buffer SPI command.
-//
-// Parameters:
-//   buffer - Transmit buffer data
-//   length - Number of bytes to transfer
-///////////////////////////////////////////
-static void canLoadTxBuffer0(
-    const uint8_t *buffer,
-    uint8_t length)
-{
-    canSelect();
-
-    canTransfer(MCP_LOAD_TX);
-
-    for(uint8_t i = 0; i < length; i++)
-    {
-        canTransfer(buffer[i]);
-    }
-
-    canDeselect();
-}
 
